@@ -1,17 +1,9 @@
-#! /usr/bin/env python
-# Daniel Agar
-# 2011-11-13
-
-# TODO: add keyboard ctrl c handling
-# TODO: add command line arguments
-# TODO: add error handling and standard loggin
-
 import fcntl
 import struct
 import array
 import bluetooth
 import bluetooth._bluetooth as bt
-
+import RPi.GPIO as GPIO
 import time
 import os
 import datetime
@@ -61,7 +53,7 @@ rssi_prev2 = -255
 near_cmd = 'br -n 1'
 far_cmd = 'br -f 1'
 
-dagar_addr = '04:18:0F:46:C6:67'
+dagar_addr = '34:FC:EF:0C:8F:CB'
 emily_addr = '43:29:B1:55:00:00'
 
 debug = 1
@@ -76,7 +68,7 @@ while True:
 
     if rssi == rssi_prev1 == rssi_prev2 == None:
         print datetime.datetime.now(), "can't detect address"
-        time.sleep(3)
+        time.sleep(0)
 
     elif rssi == rssi_prev1 == rssi_prev2 == 0:
         # change state if nearby
@@ -85,8 +77,11 @@ while True:
             far_count = 0
             os.system(near_cmd)
             print datetime.datetime.now(), "changing to near"
-
-        time.sleep(30)
+	    GPIO.setwarnings(False)
+	    GPIO.setmode(GPIO.BCM)
+	    GPIO.setup(17, GPIO.OUT)
+	    GPIO.output(17, GPIO.LOW)
+            time.sleep(1)
 
     elif rssi < -2 and rssi_prev1 < -2 and rssi_prev2 < -2:
         # if were near and single has been consisitenly low
@@ -99,13 +94,14 @@ while True:
             far_count = 0
             os.system(far_cmd)
             print datetime.datetime.now(), "changing to far"
-            time.sleep(5)
+	    GPIO.setmode(GPIO.BCM)
+	    GPIO.setup(17, GPIO.OUT)
+	    GPIO.output(17, GPIO.HIGH)
+            time.sleep(1)
 
     else:
         far_count = 0
 
 
-    rssi_prev1 = rssi
-    rssi_prev2 = rssi_prev1
-
-
+    rssi = rssi_prev1
+    rssi_prev1  = rssi_prev2
